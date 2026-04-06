@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LUXE STORE — Checkout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0d; --surface: #161616; --card: #1c1c1c; --border: #2a2a2a;
+      --accent: #c8a96e; --accent2: #e8c87e; --text: #f0ece4; --muted: #7a7570;
+      --error: #e05252; --success: #4a8a4a;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(13,13,13,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; color: var(--accent); letter-spacing: 2px; text-decoration: none; }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--accent); }
+
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 60px 48px; display: grid; grid-template-columns: 1fr 420px; gap: 48px; align-items: start; }
+    
+    /* CART SECTION */
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; margin-bottom: 32px; }
+    .cart-empty { text-align: center; padding: 80px 20px; color: var(--muted); }
+    .cart-empty .icon { font-size: 4rem; margin-bottom: 16px; }
+    .cart-empty h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--text); margin-bottom: 12px; }
+    .go-shop { display: inline-block; margin-top: 24px; background: var(--accent); color: #0d0d0d; padding: 12px 28px; border-radius: 2px; text-decoration: none; font-weight: 500; }
+
+    .cart-item { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: 64px 1fr auto; gap: 16px; align-items: center; margin-bottom: 12px; transition: border-color 0.2s; }
+    .cart-item:hover { border-color: var(--accent); }
+    .item-emoji { width: 64px; height: 64px; background: var(--surface); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .item-details { }
+    .item-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .item-cat { font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .qty-controls { display: flex; align-items: center; gap: 0; }
+    .qty-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.15s; }
+    .qty-btn:hover { background: var(--accent); border-color: var(--accent); color: #0d0d0d; }
+    .qty-num { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 500; }
+    .item-right { text-align: right; }
+    .item-price { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+    .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; }
+    .remove-btn:hover { color: var(--error); }
+
+    /* ORDER SUMMARY */
+    .summary-box { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 28px; position: sticky; top: 90px; }
+    .summary-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
+    .summary-row.total { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+    .summary-row .label { color: var(--muted); }
+
+    /* FORM */
+    .checkout-form { margin-top: 32px; }
+    .form-section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 16px; margin-top: 24px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { margin-bottom: 12px; position: relative; }
+    .form-group label { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 14px; border-radius: 2px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-group input.error { border-color: var(--error); }
+    .form-group .err-msg { font-size: 0.75rem; color: var(--error); margin-top: 4px; display: none; }
+    .form-group.has-error .err-msg { display: block; }
+    .form-group.has-error input { border-color: var(--error); }
+    .form-group select option { background: var(--card); }
+
+    .promo-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .promo-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; outline: none; transition: border-color 0.2s; }
+    .promo-row input:focus { border-color: var(--accent); }
+    .promo-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 10px 18px; border-radius: 2px; cursor: pointer; font-size: 0.82rem; transition: all 0.2s; white-space: nowrap; }
+    .promo-btn:hover { background: var(--accent); color: #0d0d0d; }
+
+    .place-order-btn {
+      width: 100%; background: var(--accent); color: #0d0d0d; border: none;
+      padding: 16px; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700;
+      border-radius: 2px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; margin-top: 8px;
+    }
+    .place-order-btn:hover { background: var(--accent2); }
+    .place-order-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .secure-note { text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 12px; }
+
+    @media(max-width: 900px) {
+      nav { padding: 0 20px; }
+      .page-wrap { grid-template-columns: 1fr; padding: 40px 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      .cart-item { grid-template-columns: 52px 1fr; }
+      .item-right { grid-column: 2; display: flex; justify-content: space-between; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">LUXE</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Shop</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrap">
+  <!-- LEFT: Cart Items + Form -->
+  <div>
+    <h1 class="section-title">Your Cart</h1>
+    <div id="cartItems"></div>
+
+    <div id="formSection" style="display:none;">
+      <div class="checkout-form">
+        <div class="form-section-title">Contact Information</div>
+        <div class="form-row">
+          <div class="form-group" id="fg-firstname">
+            <label>First Name *</label>
+            <input type="text" id="firstname" placeholder="John"/>
+            <div class="err-msg">First name is required</div>
+          </div>
+          <div class="form-group" id="fg-lastname">
+            <label>Last Name *</label>
+            <input type="text" id="lastname" placeholder="Doe"/>
+            <div class="err-msg">Last name is required</div>
+          </div>
+        </div>
+        <div class="form-group" id="fg-email">
+          <label>Email Address *</label>
+          <input type="email" id="email" placeholder="john@example.com"/>
+          <div class="err-msg">Valid email is required</div>
+        </div>
+        <div class="form-group" id="fg-phone">
+          <label>Phone Number *</label>
+          <input type="tel" id="phone" placeholder="+1 (555) 000-0000"/>
+          <div class="err-msg">Phone number is required</div>
+        </div>
+
+        <div class="form-section-title">Shipping Address</div>
+        <div class="form-group" id="fg-address">
+          <label>Street Address *</label>
+          <input type="text" id="address" placeholder="123 Main Street"/>
+          <div class="err-msg">Address is required</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" id="fg-city">
+            <label>City *</label>
+            <input type="text" id="city" placeholder="New York"/>
+            <div class="err-msg">City is required</div>
+          </div>
+          <div class="form-group" id="fg-zip">
+            <label>ZIP / Postal Code *</label>
+            <input type="text" id="zip" placeholder="10001"/>
+            <div class="err-msg">ZIP code is required</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" id="fg-state">
+            <label>State / Province *</label>
+            <input type="text" id="state" placeholder="New York"/>
+            <div class="err-msg">State is required</div>
+          </div>
+          <div class="form-group" id="fg-country">
+            <label>Country *</label>
+            <select id="country">
+              <option value="">Select Country</option>
+              <option>United States</option><option>United Kingdom</option>
+              <option>Canada</option><option>Australia</option>
+              <option>Germany</option><option>France</option>
+              <option>Japan</option><option>India</option>
+              <option>Singapore</option><option>UAE</option>
+            </select>
+            <div class="err-msg">Country is required</div>
+          </div>
+        </div>
+
+        <div class="form-section-title">Payment Details</div>
+        <div class="form-group" id="fg-cardname">
+          <label>Name on Card *</label>
+          <input type="text" id="cardname" placeholder="John Doe"/>
+          <div class="err-msg">Cardholder name is required</div>
+        </div>
+        <div class="form-group" id="fg-cardnum">
+          <label>Card Number *</label>
+          <input type="text" id="cardnum" placeholder="•••• •••• •••• ••••" maxlength="19"/>
+          <div class="err-msg">Valid card number is required</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" id="fg-expiry">
+            <label>Expiry Date *</label>
+            <input type="text" id="expiry" placeholder="MM / YY" maxlength="7"/>
+            <div class="err-msg">Expiry date is required</div>
+          </div>
+          <div class="form-group" id="fg-cvv">
+            <label>CVV *</label>
+            <input type="text" id="cvv" placeholder="•••" maxlength="4"/>
+            <div class="err-msg">CVV is required</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Order Summary -->
+  <div class="summary-box" id="summaryBox">
+    <div class="summary-title">Order Summary</div>
+    <div id="summaryLines"></div>
+    <div class="summary-row">
+      <span class="label">Subtotal</span>
+      <span id="subtotal">$0.00</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Shipping</span>
+      <span id="shipping">Free</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Tax (8%)</span>
+      <span id="tax">$0.00</span>
+    </div>
+    <div class="summary-row total">
+      <span>Total</span>
+      <span id="total">$0.00</span>
+    </div>
+
+    <div style="margin-top:20px; margin-bottom:4px;">
+      <div style="font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px;">Promo Code</div>
+      <div class="promo-row">
+        <input type="text" id="promoInput" placeholder="Enter code"/>
+        <button class="promo-btn" onclick="applyPromo()">Apply</button>
+      </div>
+      <div id="promoMsg" style="font-size:0.78rem; margin-top:-8px; margin-bottom:12px;"></div>
+    </div>
+
+    <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">Place Order →</button>
+    <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
+  </div>
+</div>
+
+<script>
+  let cart = JSON.parse(localStorage.getItem('luxe_cart') || '[]');
+  let promoApplied = false;
+
+  function saveCart() { localStorage.setItem('luxe_cart', JSON.stringify(cart)); }
+
+  function renderCart() {
+    const el = document.getElementById('cartItems');
+    const formEl = document.getElementById('formSection');
+    const btn = document.getElementById('placeOrderBtn');
+
+    if (!cart.length) {
+      el.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><h3>Your cart is empty</h3><p style="color:var(--muted)">Looks like you haven't added anything yet.</p><a href="index.html" class="go-shop">Browse Products</a></div>`;
+      formEl.style.display = 'none';
+      btn.disabled = true;
+    } else {
+      el.innerHTML = cart.map(item => `
+        <div class="cart-item" id="ci-${item.id}">
+          <div class="item-emoji">${item.emoji}</div>
+          <div class="item-details">
+            <div class="item-name">${item.name}</div>
+            <div class="item-cat">${item.category}</div>
+            <div class="qty-controls">
+              <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+              <div class="qty-num">${item.qty}</div>
+              <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+            </div>
+          </div>
+          <div class="item-right">
+            <div class="item-price">$${(item.price * item.qty).toFixed(2)}</div>
+            <button class="remove-btn" onclick="removeItem(${item.id})">Remove</button>
+          </div>
+        </div>
+      `).join('');
+      formEl.style.display = 'block';
+      btn.disabled = false;
+    }
+    renderSummary();
+  }
+
+  function renderSummary() {
+    const subtotal = cart.reduce((a, b) => a + b.price * b.qty, 0);
+    const discount = promoApplied ? subtotal * 0.1 : 0;
+    const discountedSub = subtotal - discount;
+    const tax = discountedSub * 0.08;
+    const total = discountedSub + tax;
+
+    const lines = document.getElementById('summaryLines');
+    lines.innerHTML = cart.map(i => `
+      <div class="summary-row" style="margin-bottom:6px; font-size:0.85rem;">
+        <span>${i.name} ×${i.qty}</span>
+        <span>$${(i.price * i.qty).toFixed(2)}</span>
+      </div>
+    `).join('') + (promoApplied ? `<div class="summary-row" style="color:#7ada7a;"><span>Promo (10% off)</span><span>−$${discount.toFixed(2)}</span></div>` : '') + '<hr style="border-color:var(--border); margin:12px 0;"/>';
+
+    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('shipping').textContent = subtotal > 150 ? 'Free' : '$9.99';
+    document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `$${(total + (subtotal <= 150 ? 9.99 : 0)).toFixed(2)}`;
+  }
+
+  function changeQty(id, delta) {
+    const item = cart.find(c => c.id === id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) { cart = cart.filter(c => c.id !== id); }
+    saveCart(); renderCart();
+  }
+
+  function removeItem(id) {
+    cart = cart.filter(c => c.id !== id);
+    saveCart(); renderCart();
+  }
+
+  function applyPromo() {
+    const code = document.getElementById('promoInput').value.trim().toUpperCase();
+    const msg = document.getElementById('promoMsg');
+    if (code === 'LUXE10') {
+      promoApplied = true;
+      msg.style.color = '#7ada7a';
+      msg.textContent = '✓ Promo code applied! 10% discount.';
+      renderSummary();
+    } else {
+      msg.style.color = 'var(--error)';
+      msg.textContent = '✗ Invalid promo code.';
+    }
+  }
+
+  // Card number formatting
+  document.addEventListener('DOMContentLoaded', () => {
+    const cardnum = document.getElementById('cardnum');
+    if (cardnum) {
+      cardnum.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g,'').substring(0,16);
+        e.target.value = v.replace(/(.{4})/g,'$1 ').trim();
+      });
+    }
+    const expiry = document.getElementById('expiry');
+    if (expiry) {
+      expiry.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g,'').substring(0,4);
+        if (v.length >= 2) v = v.slice(0,2) + ' / ' + v.slice(2);
+        e.target.value = v;
+      });
+    }
+  });
+
+  function validate() {
+    const fields = [
+      { id: 'firstname', fg: 'fg-firstname', check: v => v.trim().length > 0 },
+      { id: 'lastname', fg: 'fg-lastname', check: v => v.trim().length > 0 },
+      { id: 'email', fg: 'fg-email', check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+      { id: 'phone', fg: 'fg-phone', check: v => v.trim().length > 6 },
+      { id: 'address', fg: 'fg-address', check: v => v.trim().length > 3 },
+      { id: 'city', fg: 'fg-city', check: v => v.trim().length > 0 },
+      { id: 'zip', fg: 'fg-zip', check: v => v.trim().length > 2 },
+      { id: 'state', fg: 'fg-state', check: v => v.trim().length > 0 },
+      { id: 'country', fg: 'fg-country', check: v => v !== '' },
+      { id: 'cardname', fg: 'fg-cardname', check: v => v.trim().length > 2 },
+      { id: 'cardnum', fg: 'fg-cardnum', check: v => v.replace(/\s/g,'').length === 16 },
+      { id: 'expiry', fg: 'fg-expiry', check: v => v.length >= 7 },
+      { id: 'cvv', fg: 'fg-cvv', check: v => v.length >= 3 },
+    ];
+    let valid = true;
+    fields.forEach(f => {
+      const el = document.getElementById(f.id);
+      const fg = document.getElementById(f.fg);
+      if (!el || !fg) return;
+      if (!f.check(el.value)) {
+        fg.classList.add('has-error');
+        valid = false;
+      } else {
+        fg.classList.remove('has-error');
+      }
+    });
+    return valid;
+  }
+
+  function placeOrder() {
+    if (!cart.length) return;
+    if (!validate()) { document.querySelector('.has-error')?.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+    // Save order info for thank you page
+    const name = document.getElementById('firstname').value + ' ' + document.getElementById('lastname').value;
+    const email = document.getElementById('email').value;
+    const total = document.getElementById('total').textContent;
+    localStorage.setItem('luxe_order', JSON.stringify({ name, email, total, items: cart, orderId: 'LX-' + Math.random().toString(36).substr(2,8).toUpperCase() }));
+    localStorage.removeItem('luxe_cart');
+    window.location.href = 'thankyou.html';
+  }
+
+  renderCart();
+</script>
+</body>
+</html>
